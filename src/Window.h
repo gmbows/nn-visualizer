@@ -40,7 +40,7 @@ struct Window {
 	
 	void create_window();
 	
-	float value;
+	int trials = 0;
 	
 	void draw_network();
 	void draw_neuron(Neuron*,int x,int y);
@@ -61,7 +61,7 @@ struct Window {
 		this->font = TTF_OpenFont("ubuntu.ttf", this->font_size);
 		this->fgColor = { 255,255,255 };
 		this->bgColor = { 0,0,0 };
-		this->textSurface = TTF_RenderText_Shaded(font, std::to_string(this->value).c_str(), this->fgColor, this->bgColor);
+		this->textSurface = TTF_RenderText_Shaded(font, std::to_string(this->trials).c_str(), this->fgColor, this->bgColor);
 		this->running = true;
 	}
 	

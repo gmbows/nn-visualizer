@@ -5,6 +5,7 @@
 #include <map>
 #include <random>
 #include <cmath>
+#include <queue>
 
 float random_weight();
 float sigmoid(float n);
@@ -14,6 +15,40 @@ float dsigmoid(float n);
 struct Layer;
 
 extern unsigned int num_neurons;
+
+template <class T>
+struct LimitedQueue {
+	int size;
+	
+	std::queue<T> queue;
+	
+	LimitedQueue(int s): size(s) {
+	
+	}
+	
+	std::vector<T> get_elements() {
+		std::vector<T> elements;
+		std::queue<T> copy = this->queue;
+		for(int i=0;i<copy.size();i++) {
+			elements.push_back(copy.front());
+			copy.pop();
+		}
+		return elements;
+	}
+	
+	T pop() {
+		return this->queue.front();
+		this->queue.pop();
+	}
+	
+	void push(T t) {
+		this->queue.push(t);
+		if(this->queue.size() == size) {
+			this->queue.pop();
+		}
+	}
+	
+};
 
 struct Neuron {
 	unsigned int id;
@@ -59,6 +94,7 @@ struct Layer {
 struct Network {
 	
 	float err;
+	LimitedQueue<float> error_history = LimitedQueue<float>(100);
 	
 	std::vector<Layer*> layers;
 
@@ -69,6 +105,7 @@ struct Network {
 	void get_results(std::vector<float> values);
 	
 	unsigned int size;
+	
 
 	Network(std::vector<unsigned int> topology): size(topology.size()) {
 		unsigned short bias = 0;

@@ -58,7 +58,7 @@ void Network::feed_forward(std::vector<float> values) {
 
 float Neuron::sumDOW(Layer *next) {
 	float sum = 0.0f;
-	for(int i=0;i<next->size-1;i++) {
+	for(int i=0;i<next->size;i++) {
 		Neuron *neuron = next->neurons.at(i);
 		sum += this->weights.at(neuron)*neuron->gradient;
 	}
@@ -72,10 +72,13 @@ void Neuron::update_input_weights(Layer *prev) {
 		neuron->delta_weights.at(this) = newd;
 		// neuron->weights.at(this) += newd;
 		
-		// float oldw = neuron->weights.at(this);
+		float oldw = neuron->weights.at(this);
 		neuron->weights.at(this) += newd;
-		// float neww = neuron->weights.at(this);
-		// std::cout << oldw << "->" << neww << std::endl;
+		float neww = neuron->weights.at(this);
+		if(oldw == neww) {
+			// std::cout << oldw << "->" << neww << std::endl;
+			// std::cout << this->value << ", " << this->gradient << ", " << old << std::endl;
+		}
 	}
 }
 
@@ -86,6 +89,7 @@ void Neuron::calc_gradient(float target) {
 
 void Neuron::calchgrad(Layer* next) {
 	float d = sumDOW(next);
+	// if(d == 0) std::cout << "Neuron " << this->id << " has 0 gradient" << std::endl;
 	this->gradient = d * this->dtransform(this->value);
 }
 
@@ -108,6 +112,17 @@ void Network::back_prop(std::vector<float> target_values) {
 	this->err /= output_layer->size;
 	this->err = sqrt(this->err);
 	
+	this->error_history.push(err);
+	
+	float sum = 0.0;
+	for(auto &e : this->error_history.get_elements()) {
+		sum += e;
+	}
+	
+	this->err = sum/this->error_history.get_elements().size();
+	
+	
+	
 	//Calculate gradient for each output neuron
 	
 	for(int i=0;i<output_layer->size;i++) {
@@ -118,6 +133,7 @@ void Network::back_prop(std::vector<float> target_values) {
 		Layer *hidden = this->layers.at(layernum);
 		Layer *next = this->layers.at(layernum+1);
 		
+		// std::cout << "Calculating hidden gradient for layer " << layernum << std::endl;
 		for(auto &neuron : hidden->neurons) {
 			neuron->calchgrad(next);
 		}

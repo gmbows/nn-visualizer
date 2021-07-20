@@ -1,24 +1,24 @@
 #include <iostream>
 #include "Neuron.h"
 #include <random>
+#include <vector>
 #include <ctime> 
 #include <cmath>
 #include <fstream>
 #include <SDL2/SDL.h>
 #include "Window.h"
 
-
 int main(int argc, char** argv) {
 	
 	srand(time(NULL));
-	Network *net = new Network({2,4,1});
+	Network *net = new Network({4,4,3,6,1});
 	
 	SDL_Init(SDL_INIT_EVERYTHING);
 	TTF_Init();
 
-	Window window = Window(1000,800);
+	Window window = Window(1200,1000);
 	
-	float p,x,r,q;
+	float p,x,r,q,w;
 	unsigned i = 0;
 	float err = 1;
 	
@@ -26,9 +26,10 @@ int main(int argc, char** argv) {
 		p=rand()%2;
 		r=rand()%2;
 		x=rand()%2;
-		q = p and r;
+		w=rand()%2;
+		q = (p and r) ^ (x and w);
 
-		net->feed_forward({p,r});
+		net->feed_forward({p,r,x,w});
 		net->back_prop({q});
 		
 		std::vector<float> values;
@@ -37,15 +38,16 @@ int main(int argc, char** argv) {
 				values.push_back(neuron->value);
 			}
 		}
+		
 		values.push_back(net->err);
 		for(auto &val : values) {
-			std::cout << truncate(val) << "    " << std::flush;
+			// std::cout << truncate(val) << "    " << std::flush;
 		}
 		std::cout << std::endl;
 
 		err = net->err;
-		window.value = err;
 		if(i%50 == 0) window.update(net);
+		window.trials = i;
 		i++;
 	}
 	// net->feed_forward({p,r,x});

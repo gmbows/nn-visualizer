@@ -116,9 +116,8 @@ void Window::draw_circle(int n_cx, int n_cy, int radius) {
 	SDL_SetRenderDrawColor(this->renderer,0,0,0,255);
 }
 
-
 void Window::draw_text(std::string str,int x,int y) {
-	SDL_Rect textLocation = { x, y, 18*(int)str.size(),18*2};
+	SDL_Rect textLocation = { x, y, 18*(int)str.size(),40};
 	this->textSurface = TTF_RenderText_Shaded(font, str.c_str(), this->fgColor, this->bgColor);
 	SDL_Texture *text = SDL_CreateTextureFromSurface(this->renderer,this->textSurface);
 	SDL_RenderCopy(this->renderer,text,NULL,&textLocation);
@@ -130,15 +129,39 @@ void Window::draw_neuron(Neuron *neuron,int x,int y) {
 }
 
 void Window::draw_network() {
-	int x = 200;
-	int y = 100;
-	for(auto &layer : this->net->layers) {
+	
+	int startx = 100;
+	int starty = 200;
+	int x = startx;
+	int y = starty;
+	
+	int xspace = 120;
+	int yspace = 20;
+	
+	
+	this->draw_text("Trials: "+std::to_string(this->trials),20,80);
+	this->draw_text("Error: "+truncate(this->net->err),20,20);
+	
+	for(int i=0;i<this->net->layers.size();i++) {
+		Layer *layer = this->net->layers.at(i);
 		for(auto &neuron : layer->neurons) {
 			this->draw_neuron(neuron,x,y);
-			y += 100;
+			if(i == this->net->layers.size()-1) return;
+			Layer *next = this->net->layers.at(i+1);
+			int tx = x;
+			int ty = starty;
+			for(int j=0;j<next->neurons.size();j++) {
+				float weight = neuron->weights.at(next->neurons.at(j));
+				SDL_SetRenderDrawColor(this->renderer,255*(1-weight),255*weight,0,255);
+				SDL_RenderDrawLine(this->renderer,x+50+yspace,y+yspace,tx+(xspace*2)-50,ty+yspace);
+				ty+= yspace+100;
+			}
+			// ty += yspace;
+			SDL_SetRenderDrawColor(this->renderer,0,0,0,255);
+			y += 100+yspace;
 		}
-		y = 100;
-		x += 100;
+		y = starty;
+		x += 100+xspace;
 	}
 }
 
@@ -150,5 +173,5 @@ void Window::update(Network* network) {
 	this->draw_network();
 	
 	SDL_RenderPresent(this->renderer);
-	SDL_Delay(1000/144);
+	SDL_Delay(1000/30);
 }
