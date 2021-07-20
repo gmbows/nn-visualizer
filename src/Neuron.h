@@ -82,12 +82,10 @@ struct Layer {
 	Layer(unsigned int _size): size(_size) {
 		//<= for bias neuron
 		for(int i=0;i < this->size;++i) {
-			Neuron *n = new Neuron(random_weight());
+			Neuron *n = new Neuron(0.0);
 			n->bias = false;
 			this->neurons.push_back(n);
 		}
-		this->neurons.back()->value = 1.0;
-		this->neurons.back()->bias = true;
 	}
 };
 
@@ -113,8 +111,13 @@ struct Network {
 	Network(std::vector<unsigned int> topology): size(topology.size()) {
 		unsigned short bias = 0;
 		for(int i=0;i<topology.size();++i ) {
-			bias = (i != topology.size()-1);
-			this->layers.push_back(new Layer(topology.at(i)+bias));
+			bias = (i < topology.size()-2);
+			Layer *new_layer = new Layer(topology.at(i)+bias);
+			if(bias) {
+				new_layer->neurons.back()->bias = true;
+				new_layer->neurons.back()->value = 1.0;
+			}
+			this->layers.push_back(new_layer);
 		}
 		unsigned init = this->init_weights();
 		std::cout << "Initialized " << init << " weights" << std::endl;

@@ -24,7 +24,7 @@ void Neuron::feed_forward(Layer* prevlayer) {
 			std::cout << "Neuron::feed_forward(): Neuron weight not found" << std::endl;
 		}
 	}
-	this->value = this->transform(sum);
+	if(!this->bias) this->value = this->transform(sum);
 }
 
 void Network::feed_forward(std::vector<float> values) {
@@ -33,16 +33,15 @@ void Network::feed_forward(std::vector<float> values) {
 		return;
 	}
 	// std::cout << "Network::feed_forward(): Feeding forward" << std::endl;
+	//Feed input values into input layer
 	for(int i=0;i<values.size();i++) {
 		this->layers.at(0)->neurons.at(i)->value = values.at(i);
 	}
 	
+	//Feed each non-input layer forward
 	for(int i=1;i<layers.size();i++) {
 		for(auto &neuron : this->layers.at(i)->neurons) {
-			float bef = neuron->value;
 			neuron->feed_forward(this->layers.at(i-1));
-			// std::cout << "(" << bef << ", " << neuron->value << ")" << std::endl;
-	
 		}
 	}
 }
@@ -58,14 +57,13 @@ float Neuron::sumDOW(Layer *next) {
 
 void Neuron::update_input_weights(Layer *prev) {
 	for(auto &neuron : prev->neurons) {
-		float old = neuron->delta_weights.at(this);
-		float newd = eta * neuron->value * this->gradient + alpha * old;
-		neuron->delta_weights.at(this) = newd;
-		// neuron->weights.at(this) += newd;
 		
-		float oldw = neuron->weights.at(this);
+		//Calculate delta weight and update connection weight
+		float old_delta = neuron->delta_weights.at(this);
+		float newd = this->eta * neuron->value * this->gradient + this->alpha * old_delta;
+		neuron->delta_weights.at(this) = newd;
+		
 		neuron->weights.at(this) += newd;
-		float neww = neuron->weights.at(this);
 	}
 }
 
@@ -150,7 +148,11 @@ unsigned int Network::init_weights() {
 		total += this->layers.at(i)->size;
 		for(auto &Lneuron : this->layers.at(i)->neurons) {
 			for(auto &Rneuron : this->layers.at(i+1)->neurons) {
-				Lneuron->weights.insert({Rneuron,random_weight()});
+				if(Rneuron->bias) {
+					Lneuron->weights.insert({Rneuron,0.0});
+				} else {
+					Lneuron->weights.insert({Rneuron,random_weight()});
+				}
 				Lneuron->delta_weights.insert({Rneuron,0.0});
 			}
 		}

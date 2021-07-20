@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
 		window.stage = "ff";
 
 		net->feed_forward({p,r,x,w});
-		window.update(net);
+		// window.update(net);
 		
 		window.stage = "bp";
 		

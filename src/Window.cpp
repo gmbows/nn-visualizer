@@ -73,15 +73,7 @@ void Window::input() {
 	}
 }
 
-void Window::draw_circle(int n_cx, int n_cy, int radius) {
-	// if the first pixel in the screen is represented by (0,0) (which is in sdl)
-	// remember that the beginning of the circle is not in the middle of the pixel
-	// but to the left-top from it:
-
-	Uint8 a = 255;
-	Uint8 r = 255;
-	Uint8 g = 255;
-	Uint8 b = 255;
+void Window::draw_circle(int n_cx, int n_cy, int radius,Uint8 r,Uint8 g,Uint8 b,Uint8 a) {
 
 	double error = (double)-radius;
 	double x = (double)radius - 0.5;
@@ -139,7 +131,16 @@ void Window::draw_text(std::string str,int x,int y) {
 
 void Window::draw_neuron(Neuron *neuron,int x,int y) {
 	this->draw_text(this->show_gradient? neuron->gradient : neuron->value,x-13,y);
-	this->draw_circle(x+20,y+20,50);
+	float value = fabs(neuron->value);
+	if(value > 1) value = 1;
+	if(value < 0) value = 0;
+	Uint8 red = 255*(1-value);
+	Uint8 green = 255*(value);
+	if(neuron->bias) {
+		this->draw_circle(x+20,y+20,50,50,50,255,255);
+	} else {
+		this->draw_circle(x+20,y+20,50,red,green,0,255);
+	}
 }
 
 void Window::draw_network() {
@@ -162,7 +163,6 @@ void Window::draw_network() {
 	this->draw_text("Display: "+display,500,80);
 	// this->draw_text("Stage: "+this->stage,730,20);
 	
-	
 	for(int i=0;i<this->net->layers.size();i++) {
 		Layer *layer = this->net->layers.at(i);
 		for(auto &neuron : layer->neurons) {
@@ -172,7 +172,10 @@ void Window::draw_network() {
 			int tx = x;
 			int ty = starty;
 			for(int j=0;j<next->neurons.size();j++) {
+				if(next->neurons.at(j)->bias) continue;
 				float weight = fabs(neuron->weights.at(next->neurons.at(j)));
+				if(weight > 1) weight = 1;
+				if(weight < 0) weight = 0;
 				SDL_SetRenderDrawColor(this->renderer,255*(1-weight),255*weight,0,255);
 				SDL_RenderDrawLine(this->renderer,x+50+yspace,y+yspace,tx+(xspace*2)-50,ty+yspace);
 				ty+= yspace+100;

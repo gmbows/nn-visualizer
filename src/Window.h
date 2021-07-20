@@ -30,7 +30,7 @@ struct Window {
 	bool pause = false;
 	bool show_gradient = false;
 	
-	int tickrate = 1;
+	int tickrate = 5;
 	
 	std::string stage;
 	
@@ -51,7 +51,7 @@ struct Window {
 	
 	void draw_network();
 	void draw_neuron(Neuron*,int x,int y);
-	void draw_circle(int,int,int);
+	void draw_circle(int,int,int,Uint8,Uint8,Uint8,Uint8);
 	void draw_text(std::string str,int x,int y);
 	void draw_text(float f,int x,int y) {
 		this->draw_text(truncate(f),x,y);
