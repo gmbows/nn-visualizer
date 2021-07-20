@@ -28,6 +28,11 @@ int main(int argc, char** argv) {
 		x=rand()%2;
 		w=rand()%2;
 		q = (p and r) ^ (x and w);
+		
+		if(window.pause) {
+			window.update(net);
+			continue;
+		}
 
 		net->feed_forward({p,r,x,w});
 		net->back_prop({q});

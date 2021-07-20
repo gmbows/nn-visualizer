@@ -36,6 +36,9 @@ void Window::input() {
 					case (int)'q':
 						this->running = false;
 						break;
+					case (int)' ':
+						this->pause = !this->pause;
+						break;
 				}
 			case SDL_MOUSEBUTTONDOWN:
 				switch(event.button.button)  {
@@ -121,6 +124,8 @@ void Window::draw_text(std::string str,int x,int y) {
 	this->textSurface = TTF_RenderText_Shaded(font, str.c_str(), this->fgColor, this->bgColor);
 	SDL_Texture *text = SDL_CreateTextureFromSurface(this->renderer,this->textSurface);
 	SDL_RenderCopy(this->renderer,text,NULL,&textLocation);
+	SDL_FreeSurface(textSurface);
+	SDL_DestroyTexture(text);
 }
 
 void Window::draw_neuron(Neuron *neuron,int x,int y) {
@@ -151,7 +156,7 @@ void Window::draw_network() {
 			int tx = x;
 			int ty = starty;
 			for(int j=0;j<next->neurons.size();j++) {
-				float weight = neuron->weights.at(next->neurons.at(j));
+				float weight = fabs(neuron->weights.at(next->neurons.at(j)));
 				SDL_SetRenderDrawColor(this->renderer,255*(1-weight),255*weight,0,255);
 				SDL_RenderDrawLine(this->renderer,x+50+yspace,y+yspace,tx+(xspace*2)-50,ty+yspace);
 				ty+= yspace+100;

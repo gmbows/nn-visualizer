@@ -27,6 +27,8 @@ struct Window {
 	int height;
 	int width;
 	
+	bool pause = false;
+	
 	TTF_Font* font;
 	int font_size = 44;
 	SDL_Color fgColor;

@@ -29,6 +29,7 @@ void Neuron::feed_forward(Layer* prevlayer) {
 	for(auto &neuron : prevlayer->neurons) {
 		if(neuron->weights.find(this) != neuron->weights.end()) {
 			sum += neuron->value * neuron->weights.at(this);
+			// std::cout << neuron->weights.at(this) << std::endl;
 		} else {
 			std::cout << "Neuron::feed_forward(): Neuron weight not found" << std::endl;
 		}
@@ -120,11 +121,8 @@ void Network::back_prop(std::vector<float> target_values) {
 	}
 	
 	this->err = sum/this->error_history.get_elements().size();
-	
-	
-	
+		
 	//Calculate gradient for each output neuron
-	
 	for(int i=0;i<output_layer->size;i++) {
 		output_layer->neurons.at(i)->calc_gradient(target_values.at(i)); 
 	}
