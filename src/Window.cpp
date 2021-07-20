@@ -39,6 +39,15 @@ void Window::input() {
 					case (int)' ':
 						this->pause = !this->pause;
 						break;
+					case (int)'g':
+						this->show_gradient = !this->show_gradient;
+						break;
+					case SDLK_DOWN:
+						this->tickrate--;
+						break;
+					case SDLK_UP:
+						this->tickrate++;
+						break;
 				}
 			case SDL_MOUSEBUTTONDOWN:
 				switch(event.button.button)  {
@@ -129,7 +138,7 @@ void Window::draw_text(std::string str,int x,int y) {
 }
 
 void Window::draw_neuron(Neuron *neuron,int x,int y) {
-	this->draw_text(neuron->value,x-13,y);
+	this->draw_text(this->show_gradient? neuron->gradient : neuron->value,x-13,y);
 	this->draw_circle(x+20,y+20,50);
 }
 
@@ -144,8 +153,15 @@ void Window::draw_network() {
 	int yspace = 20;
 	
 	
-	this->draw_text("Trials: "+std::to_string(this->trials),20,80);
-	this->draw_text("Error: "+truncate(this->net->err),20,20);
+	this->draw_text("Error: "+truncate(this->net->err),250,20);
+	this->draw_text("Trials: "+std::to_string(this->trials),250,80);
+	this->draw_text("Eta: "+truncate(this->net->eta),20,20);
+	this->draw_text("Alpha: "+truncate(this->net->alpha),20,80);
+	std::string display = this->show_gradient? "Gradient" : "Value";
+	this->draw_text("Tickrate: "+std::to_string(this->tickrate),500,20);
+	this->draw_text("Display: "+display,500,80);
+	// this->draw_text("Stage: "+this->stage,730,20);
+	
 	
 	for(int i=0;i<this->net->layers.size();i++) {
 		Layer *layer = this->net->layers.at(i);
@@ -178,5 +194,5 @@ void Window::update(Network* network) {
 	this->draw_network();
 	
 	SDL_RenderPresent(this->renderer);
-	SDL_Delay(1000/30);
+	SDL_Delay(1000/this->tickrate);
 }

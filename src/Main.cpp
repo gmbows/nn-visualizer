@@ -22,20 +22,28 @@ int main(int argc, char** argv) {
 	unsigned i = 0;
 	float err = 1;
 	
-	while(err > 0.000 and window.running) {
+	while(window.running) {
 		p=rand()%2;
 		r=rand()%2;
 		x=rand()%2;
 		w=rand()%2;
-		q = (p and r) ^ (x and w);
+		q = ((p+r+w+x) == 2);
 		
+		window.stage = "ff";
 		if(window.pause) {
 			window.update(net);
 			continue;
 		}
+		
+		window.stage = "ff";
 
 		net->feed_forward({p,r,x,w});
+		window.update(net);
+		
+		window.stage = "bp";
+		
 		net->back_prop({q});
+		window.update(net);
 		
 		std::vector<float> values;
 		for(auto &layer : net->layers) {
@@ -48,10 +56,10 @@ int main(int argc, char** argv) {
 		for(auto &val : values) {
 			// std::cout << truncate(val) << "    " << std::flush;
 		}
-		std::cout << std::endl;
+		// std::cout << std::endl;
 
 		err = net->err;
-		if(i%50 == 0) window.update(net);
+		// if(i%30 == 0 or true) window.update(net);
 		window.trials = i;
 		i++;
 	}

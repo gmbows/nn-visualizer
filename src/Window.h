@@ -28,6 +28,11 @@ struct Window {
 	int width;
 	
 	bool pause = false;
+	bool show_gradient = false;
+	
+	int tickrate = 1;
+	
+	std::string stage;
 	
 	TTF_Font* font;
 	int font_size = 44;

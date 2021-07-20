@@ -106,6 +106,9 @@ struct Network {
 	
 	unsigned int size;
 	
+	float eta = .15;
+	float alpha = .3;
+	
 
 	Network(std::vector<unsigned int> topology): size(topology.size()) {
 		unsigned short bias = 0;

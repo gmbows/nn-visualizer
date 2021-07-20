@@ -16,20 +16,10 @@ float dsigmoid(float n) {
 
 void Neuron::feed_forward(Layer* prevlayer) {
 	float sum = 0.0f;
-	unsigned int dead = 0;
-	for(auto &neuron : prevlayer->neurons) {
-		if(neuron->value == 0 or neuron->weights.at(this) == 0) {
-			dead++;
-			// std::cout << "Neuron " << neuron->id << " is dead" << std::endl;
-		}
-	}
-	if(dead) {
-		// std::cout << "Dead neurons detected" << std::endl;
-	}
+	// if(this->bias) return;
 	for(auto &neuron : prevlayer->neurons) {
 		if(neuron->weights.find(this) != neuron->weights.end()) {
 			sum += neuron->value * neuron->weights.at(this);
-			// std::cout << neuron->weights.at(this) << std::endl;
 		} else {
 			std::cout << "Neuron::feed_forward(): Neuron weight not found" << std::endl;
 		}
@@ -76,10 +66,6 @@ void Neuron::update_input_weights(Layer *prev) {
 		float oldw = neuron->weights.at(this);
 		neuron->weights.at(this) += newd;
 		float neww = neuron->weights.at(this);
-		if(oldw == neww) {
-			// std::cout << oldw << "->" << neww << std::endl;
-			// std::cout << this->value << ", " << this->gradient << ", " << old << std::endl;
-		}
 	}
 }
 
