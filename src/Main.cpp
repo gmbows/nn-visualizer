@@ -5,77 +5,59 @@
 #include <ctime> 
 #include <cmath>
 #include <fstream>
+#include <utility>
 #include <SDL2/SDL.h>
 #include "Window.h"
 
 int main(int argc, char** argv) {
 	
 	srand(time(NULL));
-	Network *net = new Network({4,4,3,6,1});
 	
 	SDL_Init(SDL_INIT_EVERYTHING);
 	TTF_Init();
 
-	Window window = Window(1200,1000);
+	Window window = Window();
 	
-	float p,x,r,q,w;
-	unsigned i = 0;
-	float err = 1;
+	Network *net = new Network(window.topology);
 	
-	while(window.running) {
-		p=rand()%2;
-		r=rand()%2;
-		x=rand()%2;
-		w=rand()%2;
-		q = ((p+r+w+x) == 2);
-		
-		window.stage = "ff";
+	unsigned trials = 0;
+	
+	while(window.running and window.has_samples()) {
 		if(window.pause) {
 			window.update(net);
 			continue;
 		}
+		std::pair<std::vector<float>,std::vector<float>> sample = window.training_data.front();
+		window.training_data.pop();
 		
-		window.stage = "ff";
+		std::vector<float> input = sample.first;
+		std::vector<float> output = sample.second;
+		
+		//Get result and back prop target value
+		net->feed_forward(input);
 
-		net->feed_forward({p,r,x,w});
-		// window.update(net);
+		net->back_prop(output);
 		
-		window.stage = "bp";
+		int a = 0;
+		for(int i=0;i<output.size();i++) {
+			if(output.at(i) == 1) a = i;
+		}
 		
-		net->back_prop({q});
+		window.stage = std::to_string(a);
+		
+		//Update GUI
 		window.update(net);
 		
-		std::vector<float> values;
-		for(auto &layer : net->layers) {
-			for(auto &neuron : layer->neurons) {
-				values.push_back(neuron->value);
-			}
-		}
-		
-		values.push_back(net->err);
-		for(auto &val : values) {
-			// std::cout << truncate(val) << "    " << std::flush;
-		}
-		// std::cout << std::endl;
-
-		err = net->err;
-		// if(i%30 == 0 or true) window.update(net);
-		window.trials = i;
-		i++;
+		window.trials = ++trials;
 	}
-	// net->feed_forward({p,r,x});
-	std::cout << "EXPECTED " << q << std::endl;
-	std::cout << "RESULT " <<  std::flush;
-	for(auto &i : net->get_results()) {
-		std::cout << i  << " "<< std::flush;
-	}
-	// net->back_prop({q});
-	std::cout << std::endl;
-	std::cout << "ERROR " << net->err << std::endl;
-	std::cout << "Took " << i << " trials" << std::endl;
-	std::cout << std::endl;
 	
-	// std::cout << SDL_GetError() << std::endl;
+	std::cout << "Done training" << std::endl;
+
+	while(window.running) {
+		window.update(net);
+		continue;
+	}
+
 	SDL_Quit();
 	return 0;
 }

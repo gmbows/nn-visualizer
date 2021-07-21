@@ -1,7 +1,65 @@
 #include "Window.h"
 
+#include "Utility.h"
 #include <SDL2/SDL.h>
 #include <iostream>
+
+
+
+void Window::import_training_data(std::string filename) {
+	std::string raw = import_file(filename);
+	std::vector<std::string> lines = split(raw,'\n');
+	std::string top = lines.at(0);
+	lines.erase(lines.begin());
+	std::vector<std::string> vtop = split(top,' ');
+	for(auto &c : vtop) {
+		this->topology.push_back(std::stoi(c));
+	}
+	for(auto &line : lines) {
+		std::vector<float> input,output;
+		std::string in_string,out_string;
+		try {
+			in_string = split(line,'|').at(0);
+			out_string = split(line,'|').at(1);
+		} catch(const std::exception &e ){
+			std::cout << line << std::endl;
+		}
+		std::vector<std::string> in_values = split(in_string,' ');
+		std::vector<std::string> out_values = split(out_string,' ');
+		for(auto &v : in_values) {
+			try {
+				input.push_back(std::stof(v));
+			} catch(const std::exception &e ){
+					std::cout << v << std::endl;
+			}
+		}
+		for(auto &v : out_values) {
+			try {
+				output.push_back(std::stof(v));
+			} catch(const std::exception &e ){
+				std::cout << v << std::endl;
+			}
+		}
+		this->training_data.push(std::make_pair(input,output));
+	}
+	std::cout << "Imported " << this->training_data.size() << " training samples" << std::endl;
+}
+
+Window::Window() {
+	this->width = 900;
+	this->import_training_data("training_data.txt");
+	if(this->topology.size() > 4) {
+		this->width += (220*(this->topology.size()-4));
+	}
+	this->height = 1000;
+	this->create_window();
+	// this->populate();
+	this->font = TTF_OpenFont("ubuntu.ttf", this->font_size);
+	this->fgColor = { 255,255,255 };
+	this->bgColor = { 0,0,0 };
+	this->textSurface = TTF_RenderText_Shaded(font, std::to_string(this->trials).c_str(), this->fgColor, this->bgColor);
+	this->running = true;
+}
 
 std::string truncate(float n) {
 	std::string s = std::to_string(n);
@@ -131,7 +189,7 @@ void Window::draw_text(std::string str,int x,int y) {
 
 void Window::draw_neuron(Neuron *neuron,int x,int y) {
 	this->draw_text(this->show_gradient? neuron->gradient : neuron->value,x-13,y);
-	float value = fabs(neuron->value);
+	float value = (neuron->value);
 	if(value > 1) value = 1;
 	if(value < 0) value = 0;
 	Uint8 red = 255*(1-value);
@@ -145,7 +203,7 @@ void Window::draw_neuron(Neuron *neuron,int x,int y) {
 
 void Window::draw_network() {
 	
-	int startx = 100;
+	int startx = 90;
 	int starty = 200;
 	int x = startx;
 	int y = starty;
@@ -161,22 +219,38 @@ void Window::draw_network() {
 	std::string display = this->show_gradient? "Gradient" : "Value";
 	this->draw_text("Tickrate: "+std::to_string(this->tickrate),500,20);
 	this->draw_text("Display: "+display,500,80);
-	// this->draw_text("Stage: "+this->stage,730,20);
+	this->draw_text("Ex: "+this->stage,750,20);
 	
 	for(int i=0;i<this->net->layers.size();i++) {
 		Layer *layer = this->net->layers.at(i);
 		for(auto &neuron : layer->neurons) {
 			this->draw_neuron(neuron,x,y);
-			if(i == this->net->layers.size()-1) return;
+			if(i == this->net->layers.size()-1) {
+				y += 100+yspace;
+				continue;
+			}
 			Layer *next = this->net->layers.at(i+1);
 			int tx = x;
 			int ty = starty;
 			for(int j=0;j<next->neurons.size();j++) {
 				if(next->neurons.at(j)->bias) continue;
-				float weight = fabs(neuron->weights.at(next->neurons.at(j)));
-				if(weight > 1) weight = 1;
-				if(weight < 0) weight = 0;
-				SDL_SetRenderDrawColor(this->renderer,255*(1-weight),255*weight,0,255);
+				float weight = (neuron->weights.at(next->neurons.at(j)));
+				int r,g,b;
+				if(weight > 1) {
+					weight=1;
+				}
+				if(weight < 0) {
+					weight = fabs(weight);
+					r = 255*(1-weight);
+					g = 0;
+					b = 255*(weight);
+				} else {
+					r = 255*(1-weight);
+					g = 255*weight;
+					b = 0;
+				}
+				
+				SDL_SetRenderDrawColor(this->renderer,r,g,b,255);
 				SDL_RenderDrawLine(this->renderer,x+50+yspace,y+yspace,tx+(xspace*2)-50,ty+yspace);
 				ty+= yspace+100;
 			}

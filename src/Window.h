@@ -4,16 +4,11 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <random>
+#include <utility>
 #include <iostream>
+#include <queue>
 #include "Neuron.h"
-
-struct Pixel {
-	float val;
-};
-
-struct Point {
-	int x,y;
-};
+#include <string>
 
 std::string truncate(float n);
 
@@ -33,6 +28,16 @@ struct Window {
 	int tickrate = 5;
 	
 	std::string stage;
+	
+	std::vector<unsigned int> topology;
+	
+	std::queue<std::pair<std::vector<float>,std::vector<float>>> training_data;
+	
+	void import_training_data(std::string);
+	
+	bool inline has_samples() {
+		return this->training_data.size() > 0;
+	}
 	
 	TTF_Font* font;
 	int font_size = 44;
@@ -62,14 +67,6 @@ struct Window {
 	//take input and refresh screen
 	void update(Network*);
 	
-	Window(int _p,int _s): width(_p), height(_s) {
-		this->create_window();
-		// this->populate();
-		this->font = TTF_OpenFont("ubuntu.ttf", this->font_size);
-		this->fgColor = { 255,255,255 };
-		this->bgColor = { 0,0,0 };
-		this->textSurface = TTF_RenderText_Shaded(font, std::to_string(this->trials).c_str(), this->fgColor, this->bgColor);
-		this->running = true;
-	}
+	Window();
 	
 };

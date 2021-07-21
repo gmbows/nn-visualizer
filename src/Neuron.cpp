@@ -60,7 +60,7 @@ void Neuron::update_input_weights(Layer *prev) {
 		
 		//Calculate delta weight and update connection weight
 		float old_delta = neuron->delta_weights.at(this);
-		float newd = this->eta * neuron->value * this->gradient + this->alpha * old_delta;
+		float newd = eta * neuron->value * this->gradient + alpha * old_delta;
 		neuron->delta_weights.at(this) = newd;
 		
 		neuron->weights.at(this) += newd;
