@@ -39,8 +39,12 @@ int main(int argc, char** argv) {
 		net->back_prop(output);
 		
 		int a = 0;
-		for(int i=0;i<output.size();i++) {
-			if(output.at(i) == 1) a = i;
+		if(output.size() == 1) {
+			a = output.at(0);
+		} else {
+			for(int i=0;i<output.size();i++) {
+				if(output.at(i) == 1) a = i;
+			}
 		}
 		
 		window.stage = std::to_string(a);

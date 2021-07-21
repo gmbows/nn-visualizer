@@ -1,17 +1,47 @@
 #include "Neuron.h"
 
+#include <cmath>
+
 unsigned int num_neurons = 0;
+float _eta = .15;
+float _alpha = .3;
 
 float random_weight() {
-	return rand() / (float)RAND_MAX;
+	return (rand() / (float)RAND_MAX);
 }
 
-float sigmoid(float n) {
+float h_tan(float n) {
 	return tanh(n);
 }
 
-float dsigmoid(float n) {
+float dh_tan(float n) {
 	return (1 / cosh(n))*(1 / cosh(n));
+}
+
+float sigmoid(float n) {
+	return 1/(1+(pow(M_E,-n)));
+}
+
+float d_sigmoid(float n) {
+	return sigmoid(n)*(1-sigmoid(n));
+}
+
+float relu(float n) {
+	return std::max(0.0f,n);
+}
+
+float d_relu(float n) {
+	if(n <= 0) return 0;
+	return 1;
+}
+
+float l_relu(float n) {
+	return std::max(0.1f*n,n);
+}
+
+float dl_relu(float n) {
+	if(n <= 0) return 0.1f;
+	return 1;
 }
 
 void Neuron::feed_forward(Layer* prevlayer) {
@@ -60,7 +90,7 @@ void Neuron::update_input_weights(Layer *prev) {
 		
 		//Calculate delta weight and update connection weight
 		float old_delta = neuron->delta_weights.at(this);
-		float newd = eta * neuron->value * this->gradient + alpha * old_delta;
+		float newd = _eta * neuron->value * this->gradient + _alpha * old_delta;
 		neuron->delta_weights.at(this) = newd;
 		
 		neuron->weights.at(this) += newd;

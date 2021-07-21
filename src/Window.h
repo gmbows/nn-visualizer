@@ -25,7 +25,7 @@ struct Window {
 	bool pause = false;
 	bool show_gradient = false;
 	
-	int tickrate = 5;
+	int tickrate = 50;
 	
 	std::string stage;
 	

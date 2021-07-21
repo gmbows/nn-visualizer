@@ -8,13 +8,26 @@
 #include <queue>
 
 float random_weight();
-float sigmoid(float n);
 
-float dsigmoid(float n);
+float h_tan(float n);
+float dh_tan(float n);
+
+float sigmoid(float n);
+float d_sigmoid(float n);
+
+float relu(float n);
+float d_relu(float n);
+
+float l_relu(float n);
+float dl_relu(float n);
+
 
 struct Layer;
 
 extern unsigned int num_neurons;
+
+extern float _eta;
+extern float _alpha;
 
 template <class T>
 struct LimitedQueue {
@@ -55,11 +68,9 @@ struct Neuron {
 	bool bias;
 	float value;
 	float gradient;
-	float eta = .15;
-	float alpha = .3;
 	float sumDOW(Layer *next);
-	float(*transform)(float) = sigmoid;
-	float(*dtransform)(float) = dsigmoid;
+	float(*transform)(float) = h_tan;
+	float(*dtransform)(float) = dh_tan;
 	std::map<Neuron*,float> weights;
 	std::map<Neuron*,float> delta_weights;
 	
@@ -104,8 +115,8 @@ struct Network {
 	
 	unsigned int size;
 	
-	float eta = .15;
-	float alpha = .3;
+	float eta = _eta;
+	float alpha = _alpha;
 	
 
 	Network(std::vector<unsigned int> topology): size(topology.size()) {

@@ -63,16 +63,38 @@ def generate_uniform_set(topology,size):
 		data_set_as_string += create_string_entry(input_layer,target_output_layer)
 		
 	return data_set_as_string
+	
+def generate_simple_set(topology,size):
+	
+	data_set_as_string = ""
+
+	for i in range(size):
+	
+		input_layer = []
+		for k in range(topology[0]):
+			input_layer.append(random.randrange(0,2))
+
+		res = sum(input_layer) == 2
+		
+		target_output_layer = []
+		for k in range(topology[-1]):
+			target_output_layer.append(0)
+			
+		target_output_layer[0] = res
+
+		data_set_as_string += create_string_entry(input_layer,target_output_layer)
+		
+	return data_set_as_string
 		
 		
 training_set_filename = "training_data.txt"
 
 training_set_size = 50000
 
-network_topology = [4,3,6,3,3,6,5]
+network_topology = [4,4,4,1]
 
 topology_string = ' '.join([str(layer_size) for layer_size in network_topology])+"\n"
-data_set_as_string = generate_uniform_set(network_topology,training_set_size)
+data_set_as_string = generate_simple_set(network_topology,training_set_size)
 data_set_as_string = topology_string+data_set_as_string[:-1]
 
 f = open(training_set_filename,"w+")

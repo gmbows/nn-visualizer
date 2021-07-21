@@ -106,6 +106,22 @@ void Window::input() {
 					case SDLK_UP:
 						this->tickrate++;
 						break;
+					case (int)'a':
+						this->net->alpha -= .01;
+						_alpha -= .01;
+						break;
+					case (int)'s':
+						this->net->alpha += .01;
+						_alpha += .01;
+						break;
+					case (int)'e':
+						this->net->eta += .01;
+						_eta += .01;
+						break;
+					case (int)'w':
+						this->net->eta -= .01;
+						_eta -= .01;
+						break;
 				}
 			case SDL_MOUSEBUTTONDOWN:
 				switch(event.button.button)  {
