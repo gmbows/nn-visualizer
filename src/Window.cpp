@@ -4,50 +4,9 @@
 #include <SDL2/SDL.h>
 #include <iostream>
 
-
-
-void Window::import_training_data(std::string filename) {
-	std::string raw = import_file(filename);
-	std::vector<std::string> lines = split(raw,'\n');
-	std::string top = lines.at(0);
-	lines.erase(lines.begin());
-	std::vector<std::string> vtop = split(top,' ');
-	for(auto &c : vtop) {
-		this->topology.push_back(std::stoi(c));
-	}
-	for(auto &line : lines) {
-		std::vector<float> input,output;
-		std::string in_string,out_string;
-		try {
-			in_string = split(line,'|').at(0);
-			out_string = split(line,'|').at(1);
-		} catch(const std::exception &e ){
-			std::cout << line << std::endl;
-		}
-		std::vector<std::string> in_values = split(in_string,' ');
-		std::vector<std::string> out_values = split(out_string,' ');
-		for(auto &v : in_values) {
-			try {
-				input.push_back(std::stof(v));
-			} catch(const std::exception &e ){
-					std::cout << v << std::endl;
-			}
-		}
-		for(auto &v : out_values) {
-			try {
-				output.push_back(std::stof(v));
-			} catch(const std::exception &e ){
-				std::cout << v << std::endl;
-			}
-		}
-		this->training_data.push(std::make_pair(input,output));
-	}
-	std::cout << "Imported " << this->training_data.size() << " training samples" << std::endl;
-}
-
-Window::Window() {
+Window::Window(Network *network): net(network)  {
 	this->width = 900;
-	this->import_training_data("training_data.txt");
+	this->topology = this->net->topology;
 	if(this->topology.size() > 4) {
 		this->width += (220*(this->topology.size()-4));
 	}
@@ -61,7 +20,7 @@ Window::Window() {
 	this->running = true;
 }
 
-std::string truncate(float n) {
+std::string truncate(double n) {
 	std::string s = std::to_string(n);
 	return s.substr(0,std::min((int)s.size(),4));
 }
@@ -116,11 +75,11 @@ void Window::input() {
 						break;
 					case (int)'e':
 						this->net->eta += .01;
-						_eta += .01;
+						// _eta += .01;
 						break;
 					case (int)'w':
 						this->net->eta -= .01;
-						_eta -= .01;
+						// _eta -= .01;
 						break;
 				}
 			case SDL_MOUSEBUTTONDOWN:
@@ -148,6 +107,9 @@ void Window::input() {
 }
 
 void Window::draw_circle(int n_cx, int n_cy, int radius,Uint8 r,Uint8 g,Uint8 b,Uint8 a) {
+	
+	// n_cx-=radius/2;
+	// n_cy -= radius/2;
 
 	double error = (double)-radius;
 	double x = (double)radius - 0.5;
@@ -203,17 +165,19 @@ void Window::draw_text(std::string str,int x,int y) {
 	SDL_DestroyTexture(text);
 }
 
-void Window::draw_neuron(Neuron *neuron,int x,int y) {
-	this->draw_text(this->show_gradient? neuron->gradient : neuron->value,x-13,y);
-	float value = (neuron->value);
+void Window::draw_neuron(Neuron *neuron,int x,int y,int r) {
+	this->draw_text(this->show_gradient? neuron->gradient : neuron->value,x-35,y-20);
+	// SDL_SetRenderDrawColor(this->renderer,255,255,255,255);
+	// SDL_RenderDrawPoint(this->renderer, x,y);
+	double value = (neuron->value);
 	if(value > 1) value = 1;
 	if(value < 0) value = 0;
 	Uint8 red = 255*(1-value);
 	Uint8 green = 255*(value);
 	if(neuron->bias) {
-		this->draw_circle(x+20,y+20,50,50,50,255,255);
+		this->draw_circle(x,y,r,50,50,255,255);
 	} else {
-		this->draw_circle(x+20,y+20,50,red,green,0,255);
+		this->draw_circle(x,y,r,red,green,0,255);
 	}
 }
 
@@ -227,6 +191,13 @@ void Window::draw_network() {
 	int xspace = 120;
 	int yspace = 20;
 	
+	float scale = 1;
+	
+	float neuron_radius = 50.0f*scale;
+	
+
+	xspace *= scale;
+	yspace *= scale;	
 	
 	this->draw_text("Error: "+truncate(this->net->err),250,20);
 	this->draw_text("Trials: "+std::to_string(this->trials),250,80);
@@ -240,9 +211,9 @@ void Window::draw_network() {
 	for(int i=0;i<this->net->layers.size();i++) {
 		Layer *layer = this->net->layers.at(i);
 		for(auto &neuron : layer->neurons) {
-			this->draw_neuron(neuron,x,y);
+			this->draw_neuron(neuron,x,y,neuron_radius);
 			if(i == this->net->layers.size()-1) {
-				y += 100+yspace;
+				y += (neuron_radius*2)+yspace;
 				continue;
 			}
 			Layer *next = this->net->layers.at(i+1);
@@ -250,7 +221,7 @@ void Window::draw_network() {
 			int ty = starty;
 			for(int j=0;j<next->neurons.size();j++) {
 				if(next->neurons.at(j)->bias) continue;
-				float weight = (neuron->weights.at(next->neurons.at(j)));
+				double weight = (neuron->weights.at(next->neurons.at(j)));
 				int r,g,b;
 				if(weight > 1) {
 					weight=1;
@@ -267,20 +238,19 @@ void Window::draw_network() {
 				}
 				
 				SDL_SetRenderDrawColor(this->renderer,r,g,b,255);
-				SDL_RenderDrawLine(this->renderer,x+50+yspace,y+yspace,tx+(xspace*2)-50,ty+yspace);
-				ty+= yspace+100;
+				SDL_RenderDrawLine(this->renderer,x+neuron_radius,y,tx+(xspace)+(neuron_radius),ty);
+				ty += yspace+(neuron_radius*2);
 			}
 			// ty += yspace;
 			SDL_SetRenderDrawColor(this->renderer,0,0,0,255);
-			y += 100+yspace;
+			y += (neuron_radius*2)+yspace;
 		}
 		y = starty;
-		x += 100+xspace;
+		x += (neuron_radius*2)+xspace;
 	}
 }
 
-void Window::update(Network* network) {
-	this->net = network;
+void Window::update() {
 	this->input();
 	SDL_RenderClear(this->renderer);
 

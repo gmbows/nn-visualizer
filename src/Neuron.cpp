@@ -1,52 +1,56 @@
 #include "Neuron.h"
+#include "Utility.h"
 
 #include <cmath>
 
 unsigned int num_neurons = 0;
-float _eta = .15;
-float _alpha = .3;
+double _eta = .04;
+double _alpha = .1;
 
-float random_weight() {
-	return (rand() / (float)RAND_MAX);
+double random_weight() {
+	double w =  (rand() / (double)RAND_MAX)-(rand() / (double)RAND_MAX);
+	// double w =  (rand() / (double)RAND_MAX);
+	// std::cout << w << std::endl;
+	return w;
 }
 
-float h_tan(float n) {
+double h_tan(double n) {
 	return tanh(n);
 }
 
-float dh_tan(float n) {
+double dh_tan(double n) {
 	return (1 / cosh(n))*(1 / cosh(n));
 }
 
-float sigmoid(float n) {
+double sigmoid(double n) {
 	return 1/(1+(pow(M_E,-n)));
 }
 
-float d_sigmoid(float n) {
+double d_sigmoid(double n) {
 	return sigmoid(n)*(1-sigmoid(n));
 }
 
-float relu(float n) {
-	return std::max(0.0f,n);
+double relu(double n) {
+	return std::max(0.0,n);
 }
 
-float d_relu(float n) {
+double d_relu(double n) {
 	if(n <= 0) return 0;
 	return 1;
 }
 
-float l_relu(float n) {
-	return std::max(0.1f*n,n);
+double l_relu(double n) {
+	return std::max(0.1*n,n);
 }
 
-float dl_relu(float n) {
-	if(n <= 0) return 0.1f;
+double dl_relu(double n) {
+	if(n <= 0) return 0.1;
 	return 1;
 }
 
 void Neuron::feed_forward(Layer* prevlayer) {
-	float sum = 0.0f;
-	// if(this->bias) return;
+	double sum = 0.0;
+	if(this->bias) return;
 	for(auto &neuron : prevlayer->neurons) {
 		if(neuron->weights.find(this) != neuron->weights.end()) {
 			sum += neuron->value * neuron->weights.at(this);
@@ -54,12 +58,13 @@ void Neuron::feed_forward(Layer* prevlayer) {
 			std::cout << "Neuron::feed_forward(): Neuron weight not found" << std::endl;
 		}
 	}
-	if(!this->bias) this->value = this->transform(sum);
+	this->value = this->transform(sum);
 }
 
-void Network::feed_forward(std::vector<float> values) {
+void Network::feed_forward(std::vector<double> values) {
 	if(values.size() != this->layers.at(0)->size - 1) {
 		std::cout << "Network::feed_forward(): Invalid input size (" << values.size() << ", " <<  this->layers.at(0)->size - 1 << ")" << std::endl;
+		this->valid = false;
 		return;
 	}
 	// std::cout << "Network::feed_forward(): Feeding forward" << std::endl;
@@ -76,8 +81,8 @@ void Network::feed_forward(std::vector<float> values) {
 	}
 }
 
-float Neuron::sumDOW(Layer *next) {
-	float sum = 0.0f;
+double Neuron::sumDOW(Layer *next) {
+	double sum = 0.0f;
 	for(int i=0;i<next->size;i++) {
 		Neuron *neuron = next->neurons.at(i);
 		sum += this->weights.at(neuron)*neuron->gradient;
@@ -85,42 +90,43 @@ float Neuron::sumDOW(Layer *next) {
 	return sum;
 }
 
-void Neuron::update_input_weights(Layer *prev) {
+void Neuron::update_input_weights(Layer *prev,float eta,float alpha) {
 	for(auto &neuron : prev->neurons) {
 		
 		//Calculate delta weight and update connection weight
-		float old_delta = neuron->delta_weights.at(this);
-		float newd = _eta * neuron->value * this->gradient + _alpha * old_delta;
+		double old_delta = neuron->delta_weights.at(this);
+		double newd = eta * neuron->value * this->gradient + alpha * old_delta;
 		neuron->delta_weights.at(this) = newd;
 		
 		neuron->weights.at(this) += newd;
 	}
 }
 
-void Neuron::calc_gradient(float target) {
-	float err = target - this->value;
+void Neuron::calc_gradient(double target) {
+	double err = target - this->value;
 	this->gradient = err*this->dtransform(this->value);
 }
 
 void Neuron::calchgrad(Layer* next) {
-	float d = sumDOW(next);
+	double d = sumDOW(next);
 	// if(d == 0) std::cout << "Neuron " << this->id << " has 0 gradient" << std::endl;
 	this->gradient = d * this->dtransform(this->value);
 }
 
-void Network::back_prop(std::vector<float> target_values) {
+void Network::back_prop(std::vector<double> target_values) {
 	Layer *output_layer = this->layers.back();
 	this->err = 0.0f;
 	
 	if(target_values.size() != output_layer->size) {
-		std::cout << "Network::back_prop(): Target values list size does not match output layer size (" << target_values.size() << ", " << output_layer->size << ")" << std::endl;
+		std::cout << "Network::back_prop(): Target values list size does not match output layer size (got " << target_values.size() << ", expected " << output_layer->size << ")" << std::endl;
+		this->valid = false;
 		return;
 	}
 	
 	//Mean squared error for output layer
 	
 	for(int i=0;i<output_layer->size;i++) {
-		float d = target_values.at(i) - output_layer->neurons.at(i)->value;
+		double d = target_values.at(i) - output_layer->neurons.at(i)->value;
 		this->err += d*d;
 	}
 	
@@ -128,13 +134,8 @@ void Network::back_prop(std::vector<float> target_values) {
 	this->err = sqrt(this->err);
 	
 	this->error_history.push(err);
-	
-	float sum = 0.0;
-	for(auto &e : this->error_history.get_elements()) {
-		sum += e;
-	}
-	
-	this->err = sum/this->error_history.get_elements().size();
+		
+	this->err = this->error_history.average();
 		
 	//Calculate gradient for each output neuron
 	for(int i=0;i<output_layer->size;i++) {
@@ -155,13 +156,13 @@ void Network::back_prop(std::vector<float> target_values) {
 		Layer *layer = this->layers.at(i);
 		Layer *prev = this->layers.at(i-1);
 		for(auto &neuron : layer->neurons) {
-			neuron->update_input_weights(prev);
+			neuron->update_input_weights(prev,this->eta,this->alpha);
 		}
 	}
 }
 
-std::vector<float> Network::get_results() {
-	std::vector<float> results;
+std::vector<double> Network::get_results() {
+	std::vector<double> results;
 	for(int i=0;i<this->layers.back()->size;i++) {
 		results.push_back(this->layers.back()->neurons.at(i)->value);
 	}
@@ -188,4 +189,51 @@ unsigned int Network::init_weights() {
 		}
 	}
 	return total;
+}
+
+void Network::import_training_data(std::string filename) {
+	std::string raw = import_file(filename);
+	std::vector<std::string> lines = split(raw,'\n');
+	for(auto &line : lines) {
+		std::vector<double> input,output;
+		std::string in_string,out_string;
+		try {
+			in_string = split(line,'|').at(0);
+			out_string = split(line,'|').at(1);
+		} catch(const std::exception &e ){
+			std::cout << line << std::endl;
+		}
+		std::vector<std::string> in_values = split(in_string,' ');
+		std::vector<std::string> out_values = split(out_string,' ');
+		for(auto &v : in_values) {
+			try {
+				input.push_back(std::stof(v));
+			} catch(const std::exception &e ){
+					std::cout << v << std::endl;
+			}
+		}
+		for(auto &v : out_values) {
+			try {
+				output.push_back(std::stof(v));
+			} catch(const std::exception &e ){
+				std::cout << v << std::endl;
+			}
+		}
+		this->training_data.push(std::make_pair(input,output));
+	}
+	std::cout << "Imported " << this->training_data.size() << " training samples" << std::endl;
+}
+
+void Network::import_params(std::string filename) {
+	std::string raw = import_file(filename);
+	std::vector<std::string> lines = split(raw,'\n');
+	std::string top = lines.at(0);
+	std::vector<std::string> vtop = split(top,' ');
+	for(auto &c : vtop) {
+		this->topology.push_back(std::stoi(c));
+	}
+	this->size = this->topology.size();
+	this->eta = std::stof(split(lines.at(1),' ').at(0));
+	this->alpha = std::stof(split(lines.at(1),' ').at(1));
+	std::cout << "Imported network params" << std::endl;
 }

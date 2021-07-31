@@ -1,4 +1,4 @@
-import os,sys,random
+import os,sys,random,math
 
 def create_string_entry(input,output):
 	output = [str(float(value)) for value in output]
@@ -7,8 +7,38 @@ def create_string_entry(input,output):
 	output_string = " ".join(output)
 	
 	return input_string + "|" + output_string + "\n"
+	
+def generate_binary_set(topology,size):
+
+	# this should check size output <= logbase2(size input)
+	# if(topology[-1] != topology[0]+1):
+		# print("Invalid topology, exiting")
+		# exit(0)
+
+	data_set_as_string = ""
+
+	for i in range(size):
+		input_layer = []
+		for k in range(topology[0]):
+			input_layer.append(random.randrange(0,2))
+
+		_sum = sum(input_layer)
+		
+		binary = "{0:b}".format(_sum)
+		target_output_layer = []
+		target_output_layer = list(binary)
+		while(len(target_output_layer) <= math.log(len(input_layer),2)):
+			target_output_layer.insert(0,0)
+
+		data_set_as_string += create_string_entry(input_layer,target_output_layer)
+		
+	return data_set_as_string
 
 def generate_random_set(topology,size):
+
+	if(topology[-1] != topology[0]+1):
+		print("Invalid topology, exiting")
+		exit(0)
 
 	data_set_as_string = ""
 
@@ -88,14 +118,21 @@ def generate_simple_set(topology,size):
 		
 		
 training_set_filename = "training_data.txt"
+network_params_filename = "params.txt"
 
 training_set_size = 50000
 
-network_topology = [4,4,4,1]
+network_topology = [7,6,6,6,3]
+# network_topology = [5,10,10,10,6]
 
-topology_string = ' '.join([str(layer_size) for layer_size in network_topology])+"\n"
-data_set_as_string = generate_simple_set(network_topology,training_set_size)
-data_set_as_string = topology_string+data_set_as_string[:-1]
+topology_string = ' '.join([str(layer_size) for layer_size in network_topology])
+params = "0.1 0.1"
+data_set_as_string = generate_binary_set(network_topology,training_set_size)
+data_set_as_string = data_set_as_string[:-1]
+
+f = open(network_params_filename,"w+")
+f.write(topology_string+"\n"+params)
+f.close()
 
 f = open(training_set_filename,"w+")
 f.write(data_set_as_string)

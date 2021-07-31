@@ -7,80 +7,48 @@
 #include <cmath>
 #include <queue>
 
-float random_weight();
+#include "Utility.h"
 
-float h_tan(float n);
-float dh_tan(float n);
+double random_weight();
 
-float sigmoid(float n);
-float d_sigmoid(float n);
+double h_tan(double n);
+double dh_tan(double n);
 
-float relu(float n);
-float d_relu(float n);
+double sigmoid(double n);
+double d_sigmoid(double n);
 
-float l_relu(float n);
-float dl_relu(float n);
+double relu(double n);
+double d_relu(double n);
+
+double l_relu(double n);
+double dl_relu(double n);
 
 
 struct Layer;
 
 extern unsigned int num_neurons;
 
-extern float _eta;
-extern float _alpha;
-
-template <class T>
-struct LimitedQueue {
-	int size;
-	
-	std::queue<T> queue;
-	
-	LimitedQueue(int s): size(s) {
-	
-	}
-	
-	std::vector<T> get_elements() {
-		std::vector<T> elements;
-		std::queue<T> copy = this->queue;
-		for(int i=0;i<copy.size();i++) {
-			elements.push_back(copy.front());
-			copy.pop();
-		}
-		return elements;
-	}
-	
-	T pop() {
-		return this->queue.front();
-		this->queue.pop();
-	}
-	
-	void push(T t) {
-		this->queue.push(t);
-		if(this->queue.size() == size) {
-			this->queue.pop();
-		}
-	}
-	
-};
+extern double _eta;
+extern double _alpha;
 
 struct Neuron {
 	unsigned int id;
 	bool bias;
-	float value;
-	float gradient;
-	float sumDOW(Layer *next);
-	float(*transform)(float) = h_tan;
-	float(*dtransform)(float) = dh_tan;
-	std::map<Neuron*,float> weights;
-	std::map<Neuron*,float> delta_weights;
+	double value;
+	double gradient;
+	double sumDOW(Layer *next);
+	double(*transform)(double) = h_tan;
+	double(*dtransform)(double) = dh_tan;
+	std::map<Neuron*,double> weights;
+	std::map<Neuron*,double> delta_weights;
 	
 	void calchgrad(Layer* next);
-	void calc_gradient(float target);
-	void update_input_weights(Layer *prev);
+	void calc_gradient(double target);
+	void update_input_weights(Layer *prev,float,float);
 	
 	void feed_forward(Layer* prevlayer);
 	
-	Neuron(float init) {
+	Neuron(double init) {
 		this->value = init;
 		this->id = num_neurons++;
 	}
@@ -102,26 +70,38 @@ struct Layer {
 
 struct Network {
 	
-	float err;
-	LimitedQueue<float> error_history = LimitedQueue<float>(100);
+	std::queue<std::pair<std::vector<double>,std::vector<double>>> training_data;
+	
+	bool valid;
+	
+	void import_training_data(std::string);
+	void import_params(std::string);
+	
+	bool inline has_samples() {
+		return this->training_data.size() > 0;
+	}
+	
+	double err;
+	LimitedQueue<double> error_history = LimitedQueue<double>(1000);
 	
 	std::vector<Layer*> layers;
 
-	void feed_forward(std::vector<float> values);
-	std::vector<float> get_results();
+	void feed_forward(std::vector<double> values);
+	std::vector<double> get_results();
 	
-	void back_prop(std::vector<float> values);
-	void get_results(std::vector<float> values);
+	void back_prop(std::vector<double> values);
+	void get_results(std::vector<double> values);
+	
+	std::vector<unsigned int> topology;
 	
 	unsigned int size;
 	
-	float eta = _eta;
-	float alpha = _alpha;
+	double eta = _eta;
+	double alpha = _alpha;
 	
-
-	Network(std::vector<unsigned int> topology): size(topology.size()) {
+	void generate() {
 		unsigned short bias = 0;
-		for(int i=0;i<topology.size();++i ) {
+		for(int i=0;i<this->topology.size();++i ) {
 			bias = (i < topology.size()-2);
 			Layer *new_layer = new Layer(topology.at(i)+bias);
 			if(bias) {
@@ -132,11 +112,25 @@ struct Network {
 		}
 		unsigned init = this->init_weights();
 		std::cout << "Initialized " << init << " weights" << std::endl;
-		std::cout << "Created network with following topology: " << std::flush;
+		std::cout << "Created network with following topology (including bias neurons): " << std::flush;
+		this->valid = true;
 		for(auto &layer : this->layers) {
 			std::cout << layer->size << " " << std::flush;
 		}
 		std::cout << std::endl;
+	}
+	
+	Network(std::vector<unsigned int> top) {
+		this->topology = top;
+		this->size = this->topology.size();
+		this->import_training_data("training_data.txt");
+	}
+	
+
+	Network() {
+		this->import_params("params.txt");
+		this->import_training_data("training_data.txt");
+		this->generate();
 	}
 	
 	unsigned int init_weights();

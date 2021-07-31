@@ -10,7 +10,7 @@
 #include "Neuron.h"
 #include <string>
 
-std::string truncate(float n);
+std::string truncate(double n);
 
 struct Window {
 	
@@ -31,14 +31,6 @@ struct Window {
 	
 	std::vector<unsigned int> topology;
 	
-	std::queue<std::pair<std::vector<float>,std::vector<float>>> training_data;
-	
-	void import_training_data(std::string);
-	
-	bool inline has_samples() {
-		return this->training_data.size() > 0;
-	}
-	
 	TTF_Font* font;
 	int font_size = 44;
 	SDL_Color fgColor;
@@ -55,18 +47,18 @@ struct Window {
 	int trials = 0;
 	
 	void draw_network();
-	void draw_neuron(Neuron*,int x,int y);
+	void draw_neuron(Neuron*,int x,int y,int r);
 	void draw_circle(int,int,int,Uint8,Uint8,Uint8,Uint8);
 	void draw_text(std::string str,int x,int y);
-	void draw_text(float f,int x,int y) {
+	void draw_text(double f,int x,int y) {
 		this->draw_text(truncate(f),x,y);
 	}
 	
 	void input();
 	
 	//take input and refresh screen
-	void update(Network*);
+	void update();
 	
-	Window();
+	Window(Network*);
 	
 };
