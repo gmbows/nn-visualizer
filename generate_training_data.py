@@ -122,11 +122,14 @@ network_params_filename = "params.txt"
 
 training_set_size = 50000
 
-network_topology = [7,6,6,6,3]
+network_topology = [6,5,5,5,3]
 # network_topology = [5,10,10,10,6]
 
 topology_string = ' '.join([str(layer_size) for layer_size in network_topology])
+
+#eta, alpha
 params = "0.1 0.1"
+
 data_set_as_string = generate_binary_set(network_topology,training_set_size)
 data_set_as_string = data_set_as_string[:-1]
 

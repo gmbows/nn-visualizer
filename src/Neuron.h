@@ -50,6 +50,7 @@ struct Neuron {
 	
 	Neuron(double init) {
 		this->value = init;
+		this->gradient = 0;
 		this->id = num_neurons++;
 	}
 };

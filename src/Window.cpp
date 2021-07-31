@@ -170,14 +170,25 @@ void Window::draw_neuron(Neuron *neuron,int x,int y,int r) {
 	// SDL_SetRenderDrawColor(this->renderer,255,255,255,255);
 	// SDL_RenderDrawPoint(this->renderer, x,y);
 	double value = (neuron->value);
-	if(value > 1) value = 1;
-	if(value < 0) value = 0;
-	Uint8 red = 255*(1-value);
-	Uint8 green = 255*(value);
+	Uint8 red,green,blue;
+	
+	if(value > 1) {
+		value=1;
+	}
+	if(value < 0) {
+		value = fabs(value);
+		red = 255*(1-value);
+		green = 0;
+		blue = 255*(value);
+	} else {
+		red = 255*(1-value);
+		green = 255*value;
+		blue = 0;
+	}
 	if(neuron->bias) {
 		this->draw_circle(x,y,r,50,50,255,255);
 	} else {
-		this->draw_circle(x,y,r,red,green,0,255);
+		this->draw_circle(x,y,r,red,green,blue,255);
 	}
 }
 
