@@ -7,7 +7,7 @@ The program will import network parameters from the file `params.txt`.  The firs
 Parameters can be changed during training.  `E` and `W`, `S` and `A` keys will increase and decrease eta and alpha values respectively.
 
 ## Training
-The network will import training data from training_data.txt.  A python file is included that will generate various different data sets, but as long as it follows the correct format you can use your own data.
+The network imports training data from `training_data.txt`.  A python file is included that will generate various different data sets, but as long as it follows the correct format you can use your own data.
 
 ## Display
 Use `g` key to toggle between displaying neuron activation values and gradients.  <br>
