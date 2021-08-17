@@ -1,6 +1,5 @@
 # nn-visualizer
 ![img](https://raw.githubusercontent.com/gmbows/nn-visualizer/master/window.PNG)
-A small neural network visualizer built in C++. <br>
 
 ## Parameters 
 The program will import network parameters from the file `params.txt`.  The first line of the file must be the topology of network, and the second must be the eta, then alpha values seperated by a space. <br>
