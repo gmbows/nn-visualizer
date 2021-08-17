@@ -82,3 +82,5 @@ struct LimitedQueue {
 	}
 	
 };
+
+void write_vector_to_file(std::vector<std::string>, std::string filename);

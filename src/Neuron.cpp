@@ -23,11 +23,15 @@ double dh_tan(double n) {
 }
 
 double sigmoid(double n) {
-	return 1/(1+(pow(M_E,-n)));
+	// return 1/(1+(pow(M_E,-n)));
+	return (1/(1+(pow(M_E,-n*3))))-.5;
 }
 
 double d_sigmoid(double n) {
-	return sigmoid(n)*(1-sigmoid(n));
+	// return sigmoid(n)*(1-sigmoid(n));
+	double num = pow((3*M_E),-3*n);
+	double d = pow(pow(M_E,-3*n)+1,2);
+	return num/d;
 }
 
 double relu(double n) {
@@ -143,11 +147,11 @@ void Network::back_prop(std::vector<double> target_values) {
 	}
 	
 	for(int layernum = this->size-2;layernum > 0; --layernum) {
-		Layer *hidden = this->layers.at(layernum);
+		Layer *layer = this->layers.at(layernum);
 		Layer *next = this->layers.at(layernum+1);
 		
 		// std::cout << "Calculating hidden gradient for layer " << layernum << std::endl;
-		for(auto &neuron : hidden->neurons) {
+		for(auto &neuron : layer->neurons) {
 			neuron->calchgrad(next);
 		}
 	}

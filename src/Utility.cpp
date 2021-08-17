@@ -71,3 +71,12 @@ std::vector<std::vector<unsigned int>> network_permute(unsigned int xmax, unsign
 	}
 	return perms;
 }
+
+void write_vector_to_file(std::vector<std::string> data, std::string filename) {
+	std::ofstream f(filename,std::ios::binary);
+	if(!f.is_open()) return;
+	for(auto &entry : data) {
+		f << entry << " ";
+	}
+	f.close();
+}

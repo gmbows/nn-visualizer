@@ -95,6 +95,8 @@ int main(int argc, char** argv) {
 	
 	unsigned trials = 0;
 	
+	std::vector<std::string> learning_data;
+	
 	while(window.running and net->has_samples() and net->valid) {
 		if(window.pause) {
 			window.update();
@@ -111,6 +113,10 @@ int main(int argc, char** argv) {
 		net->feed_forward(input);
 
 		net->back_prop(output);
+		
+		if(trials%100 == 0) learning_data.push_back(truncate(net->err));
+		
+		write_vector_to_file(learning_data,"training.txt");
 		
 		std::string a;
 		if(output.size() == 1) {
